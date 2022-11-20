@@ -23,10 +23,9 @@
 > **\*** X is defined in the Section Header as the "block data size" (The total length of the all the block data sections) `[0x1A..0x1B]`
 > **†** Y is defined in the Section Header as the "section offset". Add `0x4C` to get the actual address in the chunk data. `[0x1C..0x3B `  
 > **‡** Z is defined in the Section Header as the "section size". `[0x3C..0x4B]`  
-> **⁂** Grids are cubes of 4×4×4 blocks (64 blocks), and there are 64 of them per section (64x64 = 4096 blocks per section). They are stored in a 4x4x4 grid of the section. 
-> **⸸** The Block ID is the first 12 bits and the Block Data is the last 4 bits.  
-> **Code:** `Byte1 Byte2` - `Block ID = ((byte2 << 4) + ((byte1 & 0xF0) >> 4)) & 0x1FF;` + `Data Value: byte1 & 0xf;`  
-> **Example:** `0x70 0x05` - `Block ID: 0x57 (87)` + `Data Value: 0x0 (0)`
+> **⁂** Grids are cubes of 4×4×4 blocks (64 blocks), and there are 64 of them per section (64x64 = 4096 blocks per section). They are stored in a 4x4x4 grid of the section.  
+> **⸸** Block data is stored in 2 bytes like this: nybbles 2, 3, and 0 make up the extended block ID, and nybble 1 makes up the data value.  
+> **Example:** `5F 10` - `Block ID: 0x105 (261)` + `Data Value: 0xF (15)`  
 
 For each section:  
 • The first 0x80 bytes `[†Y..Y+0x7F]` is the grid`⁂` index table. Grid indicies are stored in YZX format. `gridIndex = Y† + ((gx * 16) + (gz * 4) + gy)`  
@@ -39,8 +38,8 @@ For each section:
 | Format | Palette Size | Description |
 | :---: | :---: | --- |
 | 0 | 1 (0x01) | The entire grid is filled with just one type of block. Block is stored in the grid index itself (`byte 0` and `byte 1` make up the block data⸸). Copy `byte 0` and `byte 1` into the block data array 128 times (64 times each and alternating) |
-| E | 128 (0x80) | The palette for this grid is is 0x80 bytes long and are read straight into the block data array without parsing. |
-| F | 256 (0x100) | The format is the same as above and there is an extra 0x80 bytes at the end that are read straight into "Liquid" data without parsing. |
+| E | 128 (0x80) | The palette for this grid is is 0x80 bytes long and are read straight into the block data array without parsing. They are stored in YZX format. |
+| F | 256 (0x100) | The format is the same as format E, but there is an extra 0x80 bytes at the end that are read straight into "Liquid" data without parsing (also in YZX format). |
 | 2 | 12 (0x0C) | The grid contains only 2 block types. The first 2 shorts of the palette are the blocks. The last 8 bytes define bits that store the block's positions. (1 bit per block) |
 | 3 | 20 (0x14) | The format is the same as above and there is an extra 8 bytes at the end that point to the grid and are read into "Liquid" data. (1 bit per block) |
 | 4 | 24 (0x18) | The grid contains up to 4 block types. The first 4 shorts of the palette are the blocks. The last 16 bytes define bits that store the block's positions. (2 bits per block) |
@@ -49,10 +48,7 @@ For each section:
 | 7 | 64 (0x40) | The format is the same as above and there is an extra 28 bytes at the end that point to the grid and are read into "Liquid" data. (3 bits per block) |
 | 8 | 64 (0x40) | The grid contains up to 16 block types. The first 16 shorts of the palette are the blocks. The last 32 bytes define bits that store the block's positions. (4 bits per block) |
 | 9 | 96 (0x60) | The format is the same as above and there is an extra 32 bytes at the end that point to the grid and are read into "Liquid" data. (4 bits per block) |
-
-❖ If there are less blocks in the grid than the limit then it the rest will be filled with `0xFF`.
-
-❖ The extra pointers that gets parsed into "Liquid" data work the same way as the pointers to the blocks.
+> \*\* (If there are less blocks in the grid than the limit, then it fills the rest of the bytes with `0xFF`)  
 
 ❖ The code below shows how to get the block positions from the data (the previous explanation was incorrect):  
 
