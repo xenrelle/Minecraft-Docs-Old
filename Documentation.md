@@ -16,6 +16,7 @@ The following Table gives you Important information the structure of a Save file
 | Filename | 0x80 | Endian reverse Unicode string to dictate the path of the file
 | Filesize(Int) | 0x04 | Size of file in bytes
 | Offset(Int) | 0x04 | offset of file
+| Unknown 2 ints? | 0x08 | Causes issues when not accounted for.
 
 
 ### MCR Structure
